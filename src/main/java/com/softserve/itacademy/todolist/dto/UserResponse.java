@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.softserve.itacademy.todolist.model.User;
+import lombok.Builder;
 import lombok.Value;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 

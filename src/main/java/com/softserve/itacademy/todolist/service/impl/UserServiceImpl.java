@@ -1,26 +1,31 @@
 package com.softserve.itacademy.todolist.service.impl;
 
+import com.softserve.itacademy.todolist.dto.UserConverter;
+import com.softserve.itacademy.todolist.dto.UserRequest;
 import com.softserve.itacademy.todolist.exception.NullEntityReferenceException;
 import com.softserve.itacademy.todolist.model.User;
 import com.softserve.itacademy.todolist.repository.UserRepository;
 import com.softserve.itacademy.todolist.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    @Autowired
-    private UserRepository userRepository;
+
+    private final UserRepository userRepository;
+    private final UserConverter userConverter;
 
     @Override
-    public User create(User role) {
-        if (role != null) {
-            return userRepository.save(role);
+    public User create(UserRequest requestedUser) {
+        if (requestedUser != null) {
+            User user = userConverter.fillUserDataFromRequest(requestedUser);
+            return userRepository.save(user);
         }
         throw new NullEntityReferenceException("User cannot be 'null'");
     }
@@ -32,10 +37,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User update(User role) {
-        if (role != null) {
-            readById(role.getId());
-            return userRepository.save(role);
+    public User update(User user) {
+        if (user != null) {
+            User updatedUser = readById(user.getId());
+            return userRepository.save(updatedUser);
         }
         throw new NullEntityReferenceException("User cannot be 'null'");
     }
@@ -59,4 +64,5 @@ public class UserServiceImpl implements UserService {
         }
         return user;
     }
+
 }

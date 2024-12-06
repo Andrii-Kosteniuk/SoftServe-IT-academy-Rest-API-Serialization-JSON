@@ -1,20 +1,18 @@
 package com.softserve.itacademy.todolist.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.Hibernate;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import java.util.List;
-import java.util.Objects;
 
 @Getter @Setter @NoArgsConstructor @ToString
-@Entity @Table(name = "roles")
+@Entity
+@Table(name = "roles")
 public class Role implements GrantedAuthority {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

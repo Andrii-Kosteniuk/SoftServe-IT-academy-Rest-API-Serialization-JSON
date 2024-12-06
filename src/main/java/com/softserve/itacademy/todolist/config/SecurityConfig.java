@@ -1,61 +1,57 @@
 package com.softserve.itacademy.todolist.config;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
 
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Slf4j
+@Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+@EnableMethodSecurity()
+@RequiredArgsConstructor
+public class SecurityConfig {
     // todo: check https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter
 
-    @Autowired
-    UserDetailsService userServiceImpl;
 
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userServiceImpl);
-    }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(AbstractHttpConfigurer::disable)
                 .exceptionHandling(eh -> eh
-                        .authenticationEntryPoint(restAuthenticationEntryPoint())
-                )
+                        .authenticationEntryPoint(restAuthenticationEntryPoint()))
                 .httpBasic(hb -> hb
                         .authenticationEntryPoint(restAuthenticationEntryPoint()) // Handles auth error
-                )
-                .csrf().disable()
-                .headers(h -> h
-                        .frameOptions() // for Postman, the H2 console
-                        .disable()
                 )
                 .sessionManagement(sm -> sm
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // no session
                 )
-                .authorizeHttpRequests(a -> a
-                        .anyRequest().permitAll() // todo
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/auth/**", "/home", "/", "/static/**", "/error").permitAll()
+                        .requestMatchers("/api/v1/users").hasRole("ADMIN")
+                        .anyRequest().authenticated()
                 );
+
+        return http.build();
     }
 
+
     @Bean
-    PasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
 
     @Bean
     AuthenticationEntryPoint restAuthenticationEntryPoint() {

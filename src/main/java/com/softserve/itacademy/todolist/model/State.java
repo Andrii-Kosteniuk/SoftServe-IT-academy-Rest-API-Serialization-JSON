@@ -1,17 +1,18 @@
 package com.softserve.itacademy.todolist.model;
 
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
 import java.util.List;
-import java.util.Objects;
+
 
 @Getter @Setter @NoArgsConstructor
-@Entity @Table(name = "states")
+@Entity
+@Table(name = "states")
 public class State {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

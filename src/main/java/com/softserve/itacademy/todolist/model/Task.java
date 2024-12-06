@@ -1,12 +1,10 @@
 package com.softserve.itacademy.todolist.model;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
-
-import javax.persistence.*;
-import java.util.Objects;
 
 @Getter @Setter @NoArgsConstructor
 @Entity

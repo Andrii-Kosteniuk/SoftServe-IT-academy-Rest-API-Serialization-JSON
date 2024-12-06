@@ -6,7 +6,7 @@ import com.softserve.itacademy.todolist.repository.ToDoRepository;
 import com.softserve.itacademy.todolist.service.ToDoService;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 
 @Service
