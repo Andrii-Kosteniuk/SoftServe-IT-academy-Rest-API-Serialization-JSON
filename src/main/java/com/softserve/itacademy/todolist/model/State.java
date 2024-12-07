@@ -15,7 +15,8 @@ import java.util.List;
 @Table(name = "states")
 public class State {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "state_seq")
+    @SequenceGenerator(name = "state_seq", sequenceName = "STATE_SEQUENCE", allocationSize = 1)
     private Long id;
 
     @NotBlank(message = "The 'name' cannot be empty")
@@ -44,5 +45,9 @@ public class State {
                "id = " + id +
                ", name = '" + name + '\'' +
                " }";
+    }
+
+    public State(String name) {
+        this.name = name;
     }
 }

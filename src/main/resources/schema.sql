@@ -14,3 +14,7 @@ alter table todo_collaborator add constraint FK2an385byaawdel6f0svpt1igp foreign
 alter table todo_collaborator add constraint FKgw0k0aw4m2ovpyfl30h2wmoxd foreign key (collaborator_id) references users;
 alter table todos add constraint FKk1l4pem9qwnplbmfwhbsjoccs foreign key (owner_id) references users;
 alter table users add constraint FKp56c1712k691lhsyewcssf40f foreign key (role_id) references roles;
+ALTER SEQUENCE USER_SEQUENCE RESTART WITH 10;
+ALTER SEQUENCE TODO_SEQUENCE RESTART WITH 10;
+ALTER SEQUENCE TASK_SEQUENCE RESTART WITH 10;
+ALTER SEQUENCE STATE_SEQUENCE RESTART WITH 10;
