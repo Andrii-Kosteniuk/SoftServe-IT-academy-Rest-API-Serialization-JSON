@@ -1,17 +1,16 @@
 package com.softserve.itacademy.todolist.controller;
 
 import com.softserve.itacademy.todolist.dto.ApiResponse;
+import com.softserve.itacademy.todolist.dto.UserConverter;
+import com.softserve.itacademy.todolist.dto.UserRequest;
 import com.softserve.itacademy.todolist.dto.UserResponse;
 import com.softserve.itacademy.todolist.model.User;
+import com.softserve.itacademy.todolist.repository.UserRepository;
 import com.softserve.itacademy.todolist.service.UserService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,6 +21,8 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
+    private final UserConverter userConverter;
 
     @GetMapping
     List<UserResponse> getAll() {
@@ -32,22 +33,48 @@ public class UserController {
 
     @GetMapping("/{id}")
     ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable("id") int id) {
-        try {
-            User user = userService.readById(id);
-            UserResponse userResponse = new UserResponse(user);
-            ApiResponse<UserResponse> apiResponse = new ApiResponse<>(
-                    HttpStatus.OK.value(),
-                    userResponse);
 
-            return ResponseEntity.ok(apiResponse);
+        User user = userService.readById(id);
+        UserResponse userResponse = new UserResponse(user);
+        ApiResponse<UserResponse> apiResponse = new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Retrieved user",
+                userResponse);
 
-        } catch (EntityNotFoundException e) {
-            ApiResponse<UserResponse> notFoundUser = new ApiResponse<>(
-                    HttpStatus.NOT_FOUND.value(),
-                    null);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(notFoundUser);
+        return ResponseEntity.ok(apiResponse);
+
+    }
+
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createUser(@RequestBody UserRequest userRequest) {
+        if (userRepository.findByEmail(userRequest.email()) != null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("User already exists");
         }
 
+        User user = userService.create(userRequest);
+        UserResponse response = new UserResponse(user);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(
+                HttpStatus.CREATED.value(),
+                "New user was created",
+                response));
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateUser(@RequestBody UserRequest userRequest, @PathVariable long id) {
+
+        User user = userService.readById(id);
+        User updatedUser = userConverter.fillUserDataFromRequest(userRequest);
+        updatedUser.setId(user.getId());
+        userService.update(updatedUser);
+        return ResponseEntity.ok().body("User with ID: " + user.getId() + " was updated");
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable long id) {
+        userService.delete(id);
+        return ResponseEntity.ok().body("User with ID: " + id + " was deleted");
     }
 
 }

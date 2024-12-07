@@ -22,7 +22,6 @@ public class AuthController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final UserConverter userConverter;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UserRequest request) {
