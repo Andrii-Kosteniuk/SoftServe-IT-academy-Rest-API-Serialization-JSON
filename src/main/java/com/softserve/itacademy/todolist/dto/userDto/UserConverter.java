@@ -1,4 +1,4 @@
-package com.softserve.itacademy.todolist.dto;
+package com.softserve.itacademy.todolist.dto.userDto;
 
 import com.softserve.itacademy.todolist.model.Role;
 import com.softserve.itacademy.todolist.model.User;

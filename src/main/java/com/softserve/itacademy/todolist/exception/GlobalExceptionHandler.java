@@ -8,12 +8,10 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
 
 @Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler { // consider extending ResponseEntityExceptionHandler
+public class GlobalExceptionHandler  { // consider extending ResponseEntityExceptionHandler
 
     @ExceptionHandler
     public ResponseEntity<?> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {

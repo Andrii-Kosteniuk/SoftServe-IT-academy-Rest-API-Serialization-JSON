@@ -1,9 +1,12 @@
 package com.softserve.itacademy.todolist.controller;
 
 import com.softserve.itacademy.todolist.dto.ApiResponse;
-import com.softserve.itacademy.todolist.dto.UserConverter;
-import com.softserve.itacademy.todolist.dto.UserRequest;
-import com.softserve.itacademy.todolist.dto.UserResponse;
+import com.softserve.itacademy.todolist.dto.taskDto.TaskResponse;
+import com.softserve.itacademy.todolist.dto.todoDto.TodoResponse;
+import com.softserve.itacademy.todolist.dto.userDto.UserConverter;
+import com.softserve.itacademy.todolist.dto.userDto.UserRequest;
+import com.softserve.itacademy.todolist.dto.userDto.UserResponse;
+import com.softserve.itacademy.todolist.model.ToDo;
 import com.softserve.itacademy.todolist.model.User;
 import com.softserve.itacademy.todolist.repository.UserRepository;
 import com.softserve.itacademy.todolist.service.UserService;
@@ -75,6 +78,47 @@ public class UserController {
     public ResponseEntity<?> deleteUser(@PathVariable long id) {
         userService.delete(id);
         return ResponseEntity.ok().body("User with ID: " + id + " was deleted");
+    }
+
+    @GetMapping("{user_id}/todos")
+    public ResponseEntity<ApiResponse<List<TodoResponse>>> getAllTodoByUserId(@PathVariable("user_id") long id) {
+        User user = userService.readById(id);
+
+        List<TodoResponse> listOfTodo = user.getMyTodos().stream()
+                .map(TodoResponse::new)
+                .toList();
+
+        return ResponseEntity.ok().body(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Retrieved all todos by user id " + id,
+                listOfTodo
+        ));
+    }
+
+    @GetMapping("{user_id}/todos/{todo_id}/tasks")
+    public ResponseEntity<ApiResponse<List<TaskResponse>>> getAllTodoByUserId(
+            @PathVariable("user_id") long user_id,
+            @PathVariable("todo_id") long todo_id) {
+        User user = userService.readById(user_id);
+
+        List<ToDo> listOfTodo = user.getMyTodos().stream().toList();
+
+
+        List<TaskResponse> tasks = listOfTodo.stream().flatMap(toDo -> toDo.getTasks().stream()
+                .map(TaskResponse::new)).toList();
+        if (tasks.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(
+                    HttpStatus.NOT_FOUND.value(),
+                    "There are no tasks",
+                    null
+            ));
+        }
+
+        return ResponseEntity.ok().body(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Retrieved all tasks by user %d and todo %d ".formatted(user_id, todo_id),
+                tasks
+        ));
     }
 
 }

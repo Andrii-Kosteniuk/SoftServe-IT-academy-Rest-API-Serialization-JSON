@@ -1,6 +1,6 @@
 package com.softserve.itacademy.todolist.service;
 
-import com.softserve.itacademy.todolist.dto.UserRequest;
+import com.softserve.itacademy.todolist.dto.userDto.UserRequest;
 import com.softserve.itacademy.todolist.model.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 

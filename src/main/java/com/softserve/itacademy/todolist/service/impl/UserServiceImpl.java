@@ -1,7 +1,7 @@
 package com.softserve.itacademy.todolist.service.impl;
 
-import com.softserve.itacademy.todolist.dto.UserConverter;
-import com.softserve.itacademy.todolist.dto.UserRequest;
+import com.softserve.itacademy.todolist.dto.userDto.UserConverter;
+import com.softserve.itacademy.todolist.dto.userDto.UserRequest;
 import com.softserve.itacademy.todolist.exception.NullEntityReferenceException;
 import com.softserve.itacademy.todolist.model.User;
 import com.softserve.itacademy.todolist.repository.UserRepository;
