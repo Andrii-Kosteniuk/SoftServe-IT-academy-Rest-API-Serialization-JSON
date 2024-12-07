@@ -8,6 +8,7 @@ import com.softserve.itacademy.todolist.repository.UserRepository;
 import com.softserve.itacademy.todolist.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -64,5 +65,6 @@ public class UserServiceImpl implements UserService {
         }
         return user;
     }
+
 
 }

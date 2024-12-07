@@ -4,11 +4,11 @@ import com.softserve.itacademy.todolist.exception.NullEntityReferenceException;
 import com.softserve.itacademy.todolist.model.Task;
 import com.softserve.itacademy.todolist.repository.TaskRepository;
 import com.softserve.itacademy.todolist.service.TaskService;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 
 @Service
@@ -33,12 +33,8 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public Task readById(long id) {
-
-        EntityNotFoundException exception = new EntityNotFoundException("Task with id " + id + " not found");
-        logger.error(exception.getMessage(), exception);
-
         return taskRepository.findById(id).orElseThrow(
-                () -> exception);
+                () -> new EntityNotFoundException("Task with id " + id + " not found"));
     }
 
     @Override

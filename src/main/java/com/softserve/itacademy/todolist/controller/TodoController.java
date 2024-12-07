@@ -1,53 +1,162 @@
 package com.softserve.itacademy.todolist.controller;
 
+import com.softserve.itacademy.todolist.config.Auth;
 import com.softserve.itacademy.todolist.dto.ApiResponse;
-import com.softserve.itacademy.todolist.dto.taskDto.TaskRequest;
-import com.softserve.itacademy.todolist.dto.taskDto.TaskResponse;
-import com.softserve.itacademy.todolist.dto.taskDto.TaskTransformer;
-import com.softserve.itacademy.todolist.model.State;
+import com.softserve.itacademy.todolist.dto.todoDto.TodoRequest;
+import com.softserve.itacademy.todolist.dto.todoDto.TodoResponse;
+import com.softserve.itacademy.todolist.dto.userDto.CollaboratorRequest;
+import com.softserve.itacademy.todolist.dto.userDto.UserResponse;
 import com.softserve.itacademy.todolist.model.Task;
 import com.softserve.itacademy.todolist.model.ToDo;
-import com.softserve.itacademy.todolist.repository.TaskRepository;
-import com.softserve.itacademy.todolist.service.StateService;
-import com.softserve.itacademy.todolist.service.TaskService;
+import com.softserve.itacademy.todolist.model.User;
 import com.softserve.itacademy.todolist.service.ToDoService;
-import jakarta.persistence.EntityNotFoundException;
+import com.softserve.itacademy.todolist.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1/todos")
 @RequiredArgsConstructor
 public class TodoController {
 
-    private final TaskService taskService;
     private final ToDoService toDoService;
-    private final StateService stateService;
-    private final TaskRepository taskRepository;
+    private final UserService userService;
+    private final Auth auth;
 
-    @PostMapping("/{todo_id}/tasks")
-    public ResponseEntity<?> createTask(@PathVariable("todo_id") long todo_id, @RequestBody TaskRequest request) {
-        List<Task> tasks = taskRepository.getByTodoId(todo_id);
-        if (tasks.stream().map(Task::getName).anyMatch(request.name()::equals)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Task already exists");
-        }
-        ToDo toDo = toDoService.readById(todo_id);
-        State state;
-        try {
-            state = stateService.getByName("OPEN");
-        }catch (EntityNotFoundException e) {
-            state = stateService.create(new State("OPEN"));
-        }
+    // Get all todos by user_id
+    @GetMapping("{user_id}/todos")
+    public ResponseEntity<ApiResponse<List<TodoResponse>>> getAllTodoByUserId(@PathVariable("user_id") long id) {
+        User user = userService.readById(id);
 
-        Task task = TaskTransformer.fillTaskDataFromRequest(request, toDo, state);
-        taskService.create(task);
-        TaskResponse taskResponse = new TaskResponse(task);
+        List<TodoResponse> listOfTodo = user.getMyTodos().stream()
+                .map(TodoResponse::new)
+                .toList();
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>(HttpStatus.CREATED.value(), "New task was created for todo with id %d".formatted(todo_id), taskResponse));
+        return ResponseEntity.ok().body(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Retrieved all todos by user id " + id,
+                listOfTodo
+        ));
     }
+
+
+
+    // Get all collaborators by todo_id
+    @GetMapping("/{todo_id}/collaborators")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAllCollaboratorsByTodoId(
+            @PathVariable("todo_id") long todo_id) {
+
+        ToDo toDo = toDoService.readById(todo_id);
+
+        List<UserResponse> collaborators = toDo.getCollaborators().stream()
+                .map(UserResponse::new)
+                .toList();
+
+        return ResponseEntity.ok().body(new ApiResponse<>(
+                HttpStatus.OK.value(),
+                "Retrieved all collaborators by todo id : %d".formatted(todo_id),
+                collaborators));
+    }
+
+
+    // Add a new collaborator to 'todo_list'
+    @PostMapping("/{user_id}/todos/{todo_id}/collaborators")
+    public ResponseEntity<?> addCollaborator(
+            @PathVariable("user_id") long user_id,
+            @PathVariable("todo_id") long todo_id,
+            @RequestBody CollaboratorRequest request) {
+
+
+        String currentUserName = auth.getCurrentUser();
+
+        if (! currentUserName.equals(userService.readById(user_id).getEmail())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not owner the todo");
+        }
+
+        User user = userService.readById(user_id);
+        ToDo todo = toDoService.readById(todo_id);
+
+        List<Task> tasks = user.getMyTodos().stream()
+                .flatMap(toDo -> toDo.getTasks().stream())
+                .toList();
+
+        if (tasks.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiResponse<>(
+                    HttpStatus.NOT_FOUND.value(),
+                    "There are no tasks",
+                    null
+            ));
+        }
+
+        boolean isCollaboratorExists = todo.getCollaborators().stream()
+                .anyMatch(collaborator -> collaborator.getId().equals(request.getCollaborator_id()));
+
+        boolean isTodoOwnerTheSameAsCollaborator = todo.getOwner().getId().equals(request.getCollaborator_id());
+
+
+        if (isCollaboratorExists) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("This collaborator already assigned to this todo");
+        }
+        if (isTodoOwnerTheSameAsCollaborator) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("This collaborator is the same as owner of this todo");
+        }
+
+
+        User collaborator = userService.readById(request.getCollaborator_id());
+        todo.getCollaborators().add(collaborator);
+        toDoService.update(todo);
+
+        return ResponseEntity.ok().body(
+                new ApiResponse<>(HttpStatus.OK.value(),
+                        "Collaborator with id %d was added to todo with id %d".formatted(request.getCollaborator_id(), todo_id),
+                        null));
+    }
+
+    @PutMapping("/{user_id}/update/{todo_id}")
+    public ResponseEntity<?> updateTodo(@PathVariable("todo_id") long todo_id,
+                                        @PathVariable("user_id") long user_id,
+                                        @RequestBody TodoRequest todoRequest) {
+
+        User user = userService.readById(user_id);
+
+        String currentUserName = auth.getCurrentUser();
+
+        if (! currentUserName.equals(userService.readById(user_id).getEmail())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not owner this todo");
+        }
+        Optional<ToDo> findingTodo = user.getMyTodos().stream()
+                .filter(toDo -> toDo.getId().equals(todo_id)).findAny();
+        if (findingTodo.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Todo not found");
+
+        ToDo toDo = toDoService.readById(todo_id);
+
+            toDo.setTitle(todoRequest.title());
+            toDo.setCreatedAt(LocalDateTime.now());
+            toDoService.update(toDo);
+
+        return ResponseEntity.ok().body("Todo with id %d was successfully updated".formatted(todo_id));
+    }
+
+    @DeleteMapping("/delete/{todo_id}/users/{user_id}")
+    public ResponseEntity<?> deleteTask(@PathVariable("todo_id") long todo_id,
+                                        @PathVariable("user_id") long user_id) {
+
+        String currentUserName = auth.getCurrentUser();
+
+        if (! currentUserName.equals(userService.readById(user_id).getEmail())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You do not owner this todo");
+        }
+
+        toDoService.delete(todo_id);
+
+        return ResponseEntity.ok().body("Todo with id %d was successfully deleted".formatted(todo_id));
+    }
+
 
 }
