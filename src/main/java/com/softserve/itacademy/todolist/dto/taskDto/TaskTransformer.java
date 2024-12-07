@@ -25,4 +25,13 @@ public class TaskTransformer {
         task.setState(state);
         return task;
     }
+
+    public static Task fillTaskDataFromRequest(TaskRequest request, ToDo todo, State state) {
+        Task task = new Task();
+        task.setName(request.name());
+        task.setPriority(Priority.valueOf(request.priority()));
+        task.setTodo(todo);
+        task.setState(state);
+        return task;
+    }
 }
