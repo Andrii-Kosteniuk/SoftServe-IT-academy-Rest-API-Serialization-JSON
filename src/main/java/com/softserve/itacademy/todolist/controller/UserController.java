@@ -7,7 +7,6 @@ import com.softserve.itacademy.todolist.dto.userDto.UserResponse;
 import com.softserve.itacademy.todolist.model.User;
 import com.softserve.itacademy.todolist.repository.UserRepository;
 import com.softserve.itacademy.todolist.service.UserService;
-import com.softserve.itacademy.todolist.service.impl.ToDoServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,6 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     private final UserConverter userConverter;
-    private final ToDoServiceImpl toDoService;
 
     // Get all users
     @GetMapping
